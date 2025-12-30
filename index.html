@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Pro Player (Football Edition)</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --bg-dark: #0f0f0f;
+            --bg-panel: #161616;
+            --text-color: #e0e0e0;
+            --text-secondary: #888;
+            --hover-color: #333;
+            --border-color: #2a2a2a;
+            --input-bg: #111;
+            --input-border: #444;
+            --header-height: 60px;
+            --footer-height: 40px;
+            --tabs-height: 50px;
+        }
+
+        body.light-mode {
+            --bg-dark: #ffffff;
+            --bg-panel: #f4f4f4;
+            --text-color: #333;
+            --text-secondary: #666;
+            --hover-color: #e0e0e0;
+            --border-color: #ccc;
+            --input-bg: #fff;
+            --input-border: #ccc;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
+
+        /* --- Header --- */
+        header {
+            height: var(--header-height);
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text-color); }
+        .logo svg { fill: var(--primary-color); width: 24px; height: 24px; }
+
+        .theme-toggle {
+            background: none; border: 1px solid var(--border-color); color: var(--text-color);
+            cursor: pointer; padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px;
+        }
+
+        /* --- Video Section --- */
+        .video-section { width: 100%; background: #000; flex-shrink: 0; }
+        .video-wrapper { width: 100%; max-height: 40vh; margin: 0 auto; }
+        .plyr { height: 100%; width: 100%; }
+
+        /* --- Tabs --- */
+        .tabs-bar { display: flex; height: var(--tabs-height); background: var(--bg-panel); border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .tab-btn { flex: 1; background: none; border: none; color: var(--text-secondary); font-family: inherit; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); background: rgba(229, 9, 20, 0.05); }
+
+        /* --- Content Area --- */
+        .content-area { flex: 1; position: relative; overflow: hidden; }
+        .tab-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
+        .tab-content.active { display: flex; }
+
+        /* IPTV Layout */
+        .list-section { display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+        .countries-list { width: 35%; background: var(--bg-panel); border-left: 1px solid var(--border-color); }
+        .channels-list { width: 65%; background: var(--bg-dark); }
+        .search-box { padding: 8px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); }
+        .search-box input { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); outline: none; box-sizing: border-box; }
+        .scrollable-list { flex: 1; overflow-y: auto; }
+        .item { padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; }
+        .item img { width: 24px; height: 24px; margin-left: 10px; border-radius: 50%; }
+        .item span { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Football Layout */
+        #football-tab { flex-direction: column; overflow-y: auto; background: var(--bg-dark); padding: 10px; box-sizing: border-box; }
+
+        /* --- Footer (حقوق الملكية) --- */
+        footer {
+            height: var(--footer-height);
+            background-color: var(--bg-panel);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+        @media (max-width: 768px) { .countries-list { width: 40%; } .channels-list { width: 60%; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+            <span>IPTV Player</span>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span>
+        </button>
+    </header>
+
+    <div class="video-section">
+        <div class="video-wrapper">
+            <video id="player" playsinline controls crossorigin><source src="" type="application/x-mpegURL" /></video>
+        </div>
+    </div>
+
+    <div class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab('iptv')">📺 القنوات</button>
+        <button class="tab-btn" onclick="switchTab('football')">⚽ المباريات</button>
+    </div>
+
+    <div class="content-area">
+        <div id="iptv-tab" class="tab-content active">
+            <div class="list-section countries-list">
+                <div class="search-box"><input type="text" placeholder="بحث دولة..." onkeyup="filterList('countries-container', this.value)"></div>
+                <div id="countries-container" class="scrollable-list"></div>
+            </div>
+            <div class="list-section channels-list">
+                <div class="search-box"><input type="text" placeholder="بحث قناة..." onkeyup="filterList('channels-container', this.value)"></div>
+                <div id="channels-container" class="scrollable-list"></div>
+            </div>
+        </div>
+
+        <div id="football-tab" class="tab-content">
+            <api-sports-widget data-type="leagues"></api-sports-widget>
+            <api-sports-widget data-type="config" data-key="219afb927d14c7f9ba7132adf83e0a4f" data-sport="football" data-lang="ar" data-theme="dark"></api-sports-widget>
+        </div>
+    </div>
+
+    <footer>
+        Copyright &copy; عماد الدين لمراني
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <script type="module" src="https://widgets.api-sports.io/2.0.3/widgets.js"></script>
+
+    <script>
+        function switchTab(t) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.getElementById(t + '-tab').classList.add('active');
+        }
+
+        const video = document.getElementById('player');
+        let player, hls;
+
+        function initPlayer(url) {
+            if (Hls.isSupported()) {
+                if(hls) hls.destroy();
+                hls = new Hls(); hls.loadSource(url); hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    if (!player) player = new Plyr(video);
+                    video.play();
+                });
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            document.getElementById('theme-icon').textContent = isLight ? "🌙" : "☀️";
+            document.getElementById('theme-text').textContent = isLight ? "Dark Mode" : "Light Mode";
+            document.querySelector('api-sports-widget[data-type="config"]').setAttribute('data-theme', isLight ? 'white' : 'dark');
+        }
+
+        async function fetchCountries() {
+            const res = await fetch('https://iptv-org.github.io/api/countries.json');
+            const data = await res.json();
+            data.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.innerHTML = `<img src="https://flagcdn.com/w40/${c.code.toLowerCase()}.png"><span>${c.name}</span>`;
+                div.onclick = () => loadChannels(c.code, div);
+                div.setAttribute('data-name', c.name.toLowerCase());
+                document.getElementById('countries-container').appendChild(div);
+            });
+        }
+
+        async function loadChannels(code, el) {
+            document.querySelectorAll('.countries-list .item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            const res = await fetch(`https://iptv-org.github.io/iptv/countries/${code.toLowerCase()}.m3u`);
+            const text = await res.text();
+            const container = document.getElementById('channels-container');
+            container.innerHTML = '';
+            const lines = text.split('\n');
+            let current = {};
+            lines.forEach(l => {
+                if(l.startsWith('#EXTINF:')) current.name = l.split(',').pop().trim();
+                else if(l.startsWith('http')) {
+                    const d = document.createElement('div');
+                    d.className = 'item';
+                    d.innerHTML = `<span>${current.name}</span>`;
+                    d.onclick = () => initPlayer(l.trim());
+                    d.setAttribute('data-name', current.name.toLowerCase());
+                    container.appendChild(d);
+                }
+            });
+        }
+
+        function filterList(id, v) {
+            const items = document.getElementById(id).getElementsByClassName('item');
+            Array.from(items).forEach(i => i.style.display = i.getAttribute('data-name').includes(v.toLowerCase()) ? 'flex' : 'none');
+        }
+
+        fetchCountries();
+        player = new Plyr(video);
+    </script>
+</body>
+</html>
