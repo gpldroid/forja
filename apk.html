@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPTV Pro Player - Live Sports</title>
+    
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --bg-dark: #0f0f0f;
+            --bg-panel: #161616;
+            --text-color: #e0e0e0;
+            --text-secondary: #888;
+            --hover-color: #333;
+            --border-color: #2a2a2a;
+            --input-bg: #111;
+            --input-border: #444;
+            --header-height: 60px;
+            --footer-height: 40px;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        body.light-mode {
+            --bg-dark: #f8f9fa;
+            --bg-panel: #ffffff;
+            --text-color: #212529;
+            --text-secondary: #6c757d;
+            --hover-color: #e9ecef;
+            --border-color: #dee2e6;
+            --input-bg: #fff;
+            --input-border: #ced4da;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            height: 100dvh; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Header --- */
+        header {
+            height: var(--header-height);
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .logo svg {
+            fill: var(--primary-color);
+            width: 22px;
+            height: 22px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        /* --- Video Section --- */
+        .video-section {
+            width: 100%;
+            background: #000;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            margin: 0 auto;
+            max-height: 35vh; 
+        }
+        
+        @media (min-height: 800px) { .video-wrapper { max-height: 40vh; } }
+
+        .plyr { width: 100%; height: 100%; }
+
+        /* --- Main Content --- */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            border-top: 2px solid var(--primary-color);
+            min-height: 0;
+        }
+
+        .list-section {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .countries-list {
+            width: 35%;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-color);
+        }
+
+        .channels-list {
+            width: 65%;
+            background: var(--bg-dark);
+        }
+
+        .search-box {
+            padding: 10px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .search-box input:focus { border-color: var(--primary-color); }
+
+        .scrollable-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .item {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .item:hover { background-color: var(--hover-color); }
+
+        .item.active {
+            background-color: rgba(229, 9, 20, 0.15);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .item img {
+            width: 24px;
+            height: 24px;
+            margin-left: 10px;
+            border-radius: 50%;
+            object-fit: contain;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .item span {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- Matches Section (Updated) --- */
+        .matches-section {
+            background-color: var(--bg-panel);
+            border-top: 1px solid var(--border-color);
+            padding: 10px 15px;
+            flex-shrink: 0;
+            height: 145px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .matches-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .matches-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 16px;
+            padding: 0;
+            transition: color 0.3s;
+        }
+
+        .icon-btn:hover { color: var(--text-color); }
+
+        .matches-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px 2px;
+            scrollbar-width: thin;
+            height: 100%;
+            align-items: center;
+        }
+
+        .match-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+            min-width: 200px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.2s;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .match-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; width: 4px; height: 100%;
+            background: var(--border-color);
+        }
+
+        .match-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .match-team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 35%;
+        }
+
+        .match-team img {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+        }
+
+        .match-team span {
+            font-size: 10px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            color: var(--text-color);
+        }
+
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 30%;
+        }
+
+        .match-time {
+            color: #fff;
+            background: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .match-date {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* --- Modal (Popup) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal {
+            background: var(--bg-panel);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .modal-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .modal-body {
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item:hover { background: var(--hover-color); }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+        }
+
+        .btn-primary { background: var(--primary-color); color: #fff; }
+        .btn-secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); }
+
+        /* --- Footer --- */
+        footer {
+            height: var(--footer-height);
+            background-color: var(--bg-panel);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        @media (max-width: 768px) {
+            .countries-list { width: 40%; }
+            .channels-list { width: 60%; }
+            .logo span { display: none; }
+            .item { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
+            </svg>
+            <span>IPTV Pro</span>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <span id="theme-icon">☀️</span> 
+        </button>
+    </header>
+
+    <div class="video-section">
+        <div class="video-wrapper">
+            <video id="player" playsinline controls crossorigin>
+                <source src="" type="application/x-mpegURL" />
+            </video>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="list-section countries-list">
+            <div class="search-box">
+                <input type="text" placeholder="بحث دول..." onkeyup="smartSearch('countries-container', this.value)">
+            </div>
+            <div id="countries-container" class="scrollable-list">
+                <div class="status-msg">تحميل...</div>
+            </div>
+        </div>
+
+        <div class="list-section channels-list">
+            <div class="search-box">
+                <input type="text" id="search-channel" placeholder="بحث قنوات (ذكي)..." onkeyup="smartSearch('channels-container', this.value)">
+            </div>
+            <div id="channels-container" class="scrollable-list">
+                <div class="status-msg" style="padding-top: 50px;">👈 اختر دولة</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="matches-section">
+        <div class="matches-header">
+            <span>⚽ المباريات القادمة</span>
+            <div class="matches-actions">
+                <button class="icon-btn" onclick="fetchMatches()" title="تحديث">🔄</button>
+                <button class="icon-btn" onclick="openLeagueModal()" title="تصفية البطولات">⚙️ تصفية</button>
+            </div>
+        </div>
+        <div class="matches-scroll" id="matches-wrapper">
+            <div class="status-msg" style="width:100%">جاري جلب البيانات...</div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Copyright &copy; IPTV Player 2024</p>    
+    </footer>
+
+    <div class="modal-overlay" id="leagueModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span>اختيار البطولات</span>
+                <span style="cursor:pointer;" onclick="closeLeagueModal()">✕</span>
+            </div>
+            <div class="modal-body">
+                <div class="checkbox-group" id="leagues-checkboxes">
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeLeagueModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="saveLeagues()">حفظ وعرض</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+    <script>
+        // --- 1. إعدادات API المباريات ---
+        // ملاحظة: هذا المفتاح '3' هو مفتاح اختبار عام لـ TheSportsDB. 
+        // للحصول على جميع الدوريات بشكل دائم، يفضل الحصول على مفتاح خاص بك من موقعهم.
+        const API_KEY = '3'; 
+        const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${API_KEY}`;
+        
+        // قائمة الدوريات المدعومة (الاسم و المعرف ID)
+        const AVAILABLE_LEAGUES = [
+            { id: '4328', name: 'الدوري الإنجليزي الممتاز' },
+            { id: '4335', name: 'الدوري الإسباني' },
+            { id: '4332', name: 'الدوري الإيطالي' },
+            { id: '4331', name: 'الدوري الألماني' },
+            { id: '4334', name: 'الدوري الفرنسي' },
+            { id: '4480', name: 'دوري أبطال أوروبا' }
+        ];
+
+        // --- 2. المتغيرات العامة ---
+        const countriesContainer = document.getElementById('countries-container');
+        const channelsContainer = document.getElementById('channels-container');
+        const videoElement = document.getElementById('player');
+        let player, hls;
+        let allCountries = [];
+        let selectedLeagues = JSON.parse(localStorage.getItem('selectedLeagues')) || ['4328', '4335']; // افتراضيا الدوري الانجليزي والاسباني
+
+        // --- 3. تشغيل الفيديو ---
+        function initPlayer(sourceUrl) {
+            if (Hls.isSupported()) {
+                if (hls) hls.destroy();
+                hls = new Hls();
+                hls.loadSource(sourceUrl);
+                hls.attachMedia(videoElement);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    if (!player) player = new Plyr(videoElement, { controls: ['play-large', 'play', 'progress', 'mute', 'volume', 'fullscreen'] });
+                    videoElement.play().catch(() => {});
+                });
+            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = sourceUrl;
+                if (!player) player = new Plyr(videoElement);
+                videoElement.play();
+            }
+        }
+
+        // --- 4. جلب المباريات (API Logic) ---
+        async function fetchMatches() {
+            const container = document.getElementById('matches-wrapper');
+            container.innerHTML = '<div class="status-msg" style="width:100%">جاري التحديث...</div>';
+            
+            let allMatches = [];
+
+            try {
+                // استخدام Promise.all لجلب الدوريات المختارة بالتوازي
+                const requests = selectedLeagues.map(leagueId => 
+                    fetch(`${BASE_URL}/eventsnextleague.php?id=${leagueId}`)
+                        .then(res => res.json())
+                        .then(data => data.events || [])
+                        .catch(() => [])
+                );
+
+                const results = await Promise.all(requests);
+                
+                // دمج النتائج
+                results.forEach(events => allMatches.push(...events));
+
+                // ترتيب حسب الوقت
+                allMatches.sort((a, b) => new Date(a.strTimestamp) - new Date(b.strTimestamp));
+
+                renderMatches(allMatches);
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<div class="status-msg" style="width:100%">فشل جلب المباريات. تأكد من الاتصال.</div>';
+            }
+        }
+
+        function renderMatches(matches) {
+            const container = document.getElementById('matches-wrapper');
+            container.innerHTML = '';
+
+            if (matches.length === 0) {
+                container.innerHTML = '<div class="status-msg" style="width:100%">لا توجد مباريات قادمة في الدوريات المختارة.</div>';
+                return;
+            }
+
+            matches.forEach(match => {
+                const date = new Date(match.strTimestamp);
+                const timeStr = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                
+                // البحث عن شعارات الفرق (قد لا تتوفر دائماً في النسخة المجانية)
+                // في النسخة المدفوعة تكون متاحة، هنا سنستخدم صورة افتراضية في حال العدم
+                const homeBadge = match.strHomeTeamBadge || 'https://via.placeholder.com/35?text=H';
+                const awayBadge = match.strAwayTeamBadge || 'https://via.placeholder.com/35?text=A';
+
+                card.innerHTML = `
+                    <div class="match-team">
+                         <span title="${match.strHomeTeam}">${match.strHomeTeam}</span>
+                    </div>
+                    <div class="match-info">
+                        <div class="match-time">${timeStr}</div>
+                        <div class="match-date">${dateStr}</div>
+                    </div>
+                    <div class="match-team">
+                        <span title="${match.strAwayTeam}">${match.strAwayTeam}</span>
+                    </div>
+                `;
+                
+                // البحث الذكي عند الضغط
+                card.onclick = () => {
+                    const searchInput = document.getElementById('search-channel');
+                    // نبحث عن اسم الفريق الأول
+                    searchInput.value = match.strHomeTeam.split(' ')[0]; 
+                    smartSearch('channels-container', searchInput.value);
+                    
+                    // تنبيه بسيط
+                    // alert(`جاري البحث عن قنوات تعرض: ${match.strEvent}`);
+                };
+
+                container.appendChild(card);
+            });
+        }
+
+        // --- 5. إدارة المودال (نافذة التصفية) ---
+        function openLeagueModal() {
+            const container = document.getElementById('leagues-checkboxes');
+            container.innerHTML = '';
+            
+            AVAILABLE_LEAGUES.forEach(league => {
+                const isChecked = selectedLeagues.includes(league.id) ? 'checked' : '';
+                container.innerHTML += `
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="${league.id}" ${isChecked}>
+                        <span>${league.name}</span>
+                    </label>
+                `;
+            });
+
+            document.getElementById('leagueModal').style.display = 'flex';
+        }
+
+        function closeLeagueModal() {
+            document.getElementById('leagueModal').style.display = 'none';
+        }
+
+        function saveLeagues() {
+            const checkboxes = document.querySelectorAll('#leagues-checkboxes input[type="checkbox"]');
+            selectedLeagues = [];
+            checkboxes.forEach(box => {
+                if (box.checked) selectedLeagues.push(box.value);
+            });
+            
+            localStorage.setItem('selectedLeagues', JSON.stringify(selectedLeagues));
+            closeLeagueModal();
+            fetchMatches(); // تحديث القائمة
+        }
+
+        // --- 6. البحث الذكي (Smart Search) ---
+        function normalizeText(text) {
+            return text
+                .toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // إزالة التشكيل
+                .replace(/[أإآ]/g, 'ا') // توحيد الألف
+                .replace(/ى/g, 'ي')
+                .replace(/ة/g, 'ه')
+                .trim();
+        }
+
+        function smartSearch(containerId, query) {
+            const container = document.getElementById(containerId);
+            const items = container.getElementsByClassName('item');
+            const cleanQuery = normalizeText(query);
+            
+            let hasResults = false;
+
+            for (let item of items) {
+                const originalName = item.getAttribute('data-name');
+                const cleanName = normalizeText(originalName);
+                
+                if (cleanName.includes(cleanQuery)) {
+                    item.style.display = 'flex';
+                    hasResults = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            }
+
+            // التعامل مع رسالة "لا توجد نتائج"
+            // (يمكن تحسينها بإضافة عنصر div خاص للرسائل)
+        }
+
+        // --- 7. وظائف النظام الأساسية (IPTV) ---
+        async function fetchCountries() {
+            try {
+                const res = await fetch('https://iptv-org.github.io/api/countries.json');
+                const data = await res.json();
+                allCountries = data.sort((a, b) => a.name.localeCompare(b.name));
+                
+                countriesContainer.innerHTML = '';
+                allCountries.forEach(c => {
+                    if (c.name && c.code) {
+                        const div = document.createElement('div');
+                        div.className = 'item';
+                        div.setAttribute('data-name', c.name);
+                        div.innerHTML = `
+                            <img src="https://flagcdn.com/w40/${c.code.toLowerCase()}.png" onerror="this.style.display='none'">
+                            <span>${c.name}</span>
+                        `;
+                        div.onclick = () => loadCountryChannels(c.code, c.name, div);
+                        countriesContainer.appendChild(div);
+                    }
+                });
+            } catch (e) { countriesContainer.innerHTML = '<div class="status-msg">خطأ اتصال</div>'; }
+        }
+
+        async function loadCountryChannels(code, name, el) {
+            document.querySelectorAll('.countries-list .item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            channelsContainer.innerHTML = `<div class="status-msg">تحميل قنوات ${name}...</div>`;
+            document.getElementById('search-channel').value = '';
+
+            try {
+                const res = await fetch(`https://iptv-org.github.io/iptv/countries/${code.toLowerCase()}.m3u`);
+                if (!res.ok) throw new Error("No channels");
+                const text = await res.text();
+                const channels = parseM3U(text);
+                
+                channelsContainer.innerHTML = '';
+                if(channels.length === 0) channelsContainer.innerHTML = '<div class="status-msg">لا توجد قنوات.</div>';
+                
+                channels.forEach(ch => {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.setAttribute('data-name', ch.name);
+                    div.innerHTML = `
+                        <img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/40?text=TV'">
+                        <span>${ch.name}</span>
+                    `;
+                    div.onclick = () => {
+                        initPlayer(ch.url);
+                        if(window.innerWidth < 768) window.scrollTo({ top: 0, behavior: 'smooth' });
+                    };
+                    channelsContainer.appendChild(div);
+                });
+            } catch (e) { channelsContainer.innerHTML = '<div class="status-msg">لا قنوات متاحة</div>'; }
+        }
+
+        function parseM3U(content) {
+            const lines = content.split('\n');
+            const channels = [];
+            let current = {};
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('#EXTINF:')) {
+                    const logo = line.match(/tvg-logo="([^"]*)"/)?.[1] || '';
+                    const name = line.split(',').pop().trim();
+                    current = { name, logo };
+                } else if (line.startsWith('http')) {
+                    current.url = line;
+                    channels.push(current);
+                }
+            }
+            return channels;
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+        }
+
+        // --- بدء التطبيق ---
+        document.addEventListener('DOMContentLoaded', () => {
+            player = new Plyr(videoElement);
+            fetchCountries();
+            fetchMatches(); // استدعاء API المباريات
+        });
+
+    </script>
+</body>
+</html>
